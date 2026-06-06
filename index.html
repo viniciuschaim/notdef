@@ -1,0 +1,121 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    
+    <style>
+      /* Style for the overlay screen */
+      #branding-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: #111111; /* Dark sleek background */
+        z-index: 9999; /* Ensures it sits on top of the camera view */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        transition: opacity 0.5s ease; /* Smooth fade-out animation */
+      }
+
+      /* Logo container styles */
+      #branding-logo {
+        max-width: 150px;
+        height: auto;
+        margin-bottom: 20px;
+      }
+
+      /* Optional loading text/typography */
+      #loading-text {
+        color: #ffffff;
+        font-family: sans-serif;
+        font-size: 14px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+      }
+
+      /* Class to trigger the fade out */
+      .hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+    </style>
+
+    <script>
+      // Video Play/Pause Logic
+      AFRAME.registerComponent('video-handler', {
+        schema: {
+          videoId: {type: 'string'}
+        },
+        init: function () {
+          const target = this.el;
+          const video = document.querySelector(this.data.videoId);
+
+          target.addEventListener('targetFound', () => {
+            video.play();
+          });
+
+          target.addEventListener('targetLost', () => {
+            video.pause();
+          });
+        }
+      });
+
+      // Automation Script for Pages + Hiding Splash Screen
+      window.addEventListener('DOMContentLoaded', () => {
+        const assets = document.querySelector('a-assets');
+        const scene = document.querySelector('a-scene');
+        const totalPages = 20;
+
+        // 1. Generate all 20 pages dynamically
+        for (let i = 1; i <= totalPages; i++) {
+          const targetIndex = i - 1;
+
+          const video = document.createElement('video');
+          video.id = `Video_${i}`;
+          video.src = `./Video_${i}.mp4`;
+          video.setAttribute('loop', '');
+          video.setAttribute('muted', '');
+          video.setAttribute('playsinline', '');
+          assets.appendChild(video);
+
+          const entity = document.createElement('a-entity');
+          entity.setAttribute('mindar-image-target', `targetIndex: ${targetIndex}`);
+          entity.setAttribute('video-handler', `videoId: #Video_${i}`);
+
+          const aVideo = document.createElement('a-video');
+          aVideo.setAttribute('src', `#Video_${i}`);
+          aVideo.setAttribute('width', '1.6');
+          aVideo.setAttribute('height', '0.9');
+          aVideo.setAttribute('position', '0 0 0.05');
+          aVideo.setAttribute('rotation', '0 0 0');
+
+          entity.appendChild(aVideo);
+          scene.appendChild(entity);
+        }
+
+        // 2. Hide branding overlay when AR engine ready
+        scene.addEventListener('arReady', () => {
+          const overlay = document.querySelector('#branding-overlay');
+          overlay.classList.add('hidden');
+        });
+      });
+    </script>
+  </head>
+  <body>
+
+    <div id="branding-overlay">
+      <img id="branding-logo" src="./logo.png" alt="Branding Logo" onerror="this.style.display='none'" />
+      <div id="loading-text">Carregando Experiência...</div>
+    </div>
+
+    <a-scene mindar-scene mindar-image="imageTargetSrc: ./targets.mind;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+      <a-assets></a-assets>
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    </a-scene>
+
+  </body>
+</html>
